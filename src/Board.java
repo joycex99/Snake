@@ -1,177 +1,118 @@
-import java.awt.*;
-import java.awt.event.*;
-
-import javax.swing.*;
-
 import java.util.Random;
 
-public class Board extends JPanel implements ActionListener {
-	final int rows;
-	final int cols;
-	Cell[][] cells;
-
-	//determines direction
-	public static final int STATIC = 0; 
-	public static final int RIGHT = 1;
-	public static final int LEFT = -1;
-	public static final int UP = 2;
-	public static final int DOWN = -2;
+/**
+ * Board class:
+ * Constructs the board as an array of object Cell
+ * Can check if a Cell exists, set it to the board, etc.
+ * Generates the apple
+ * Renders the board for GUI configuration
+ * 
+ * @author Joyce
+ */
+public class Board {
+	private final int rows;
+	private final int cols;
+	private Cell[][] cells;
+	private Snake snake;
+	//private int score;
 	
-	public Snake snake;
-	public int direction = UP;
-	public static boolean gameOver;
+	/** constructor: builds array of Cells 
+	 * @param r is the number of rows
+	 * @param c is the number of columns
+	 */
+	public Board(int r, int c) {
+		this.rows = r;
+		this.cols = c;
+		this.cells = new Cell[rows][cols];
+	}
 	
-	//constructor: builds array of Cells with the specified rows, columns; adds specified snake
-	public Board(int r, int c, Snake snake) {
-		rows = r;
-		cols = c;
+	public int getNumRows() {
+		return this.rows;
+	}
+	
+	public int getNumCols() {
+		return this.cols;
+	}
+	
+	public void setSnake(Snake snake) {
 		this.snake = snake;
-		
-		cells = new Cell[rows][cols];
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; j++) {
-				cells[i][j] = new Cell(i, j);
-				
-			}
+	}
+	
+	/*public int getScore() {
+		return this.score;
+	}*/
+	
+	/**checks to see if the specified cell is on the board*/
+	public boolean hasCell(int r, int c) {
+		if (r >= this.rows || c >= this.cols)
+			return false;
+		return true;
+	}
+	
+	/**returns the cell if it exists, null if it's off the board*/
+	public Cell getCell(int r, int c) {
+		if (!this.hasCell(r, c)) {
+			return null;
 		}
-		for (Cell cell: snake.snake) {
-			int i = cell.row;
-			int j = cell.col;
-			cells[i][j].type = Cell.SNAKE;
-		}
+		return this.cells[r][c];
+	}
+	
+	/**adds a cell to the board based on the cell's x and y*/
+	public boolean setCell(Cell cell) {
+		int col = cell.getX();
+		int row = cell.getY();
 		
-		//keylistener: should change the snake's direction (NOT WORKING)
-		KeyListener l = new KeyAdapter() {
-			@Override 
-			public void keyPressed(KeyEvent e) {
-				int k = e.getKeyCode();
-				
-				if (k == KeyEvent.VK_UP && direction != DOWN) {
-					setDirection(UP);
-				}
-				else if (k == KeyEvent.VK_DOWN && direction != UP) {
-					setDirection(DOWN);
-				}
-				else if (k == KeyEvent.VK_RIGHT && direction != LEFT) {
-					setDirection(RIGHT);
-				}
-				else if (k == KeyEvent.VK_LEFT && direction != RIGHT) {
-					setDirection(LEFT);
-				}
-				repaint();
-			}
-		};
-		this.addKeyListener(l);
-		setFocusable(true);
-		//init();
-	}
-	
-	//initializes game: generates apple, updates/repaints every two seconds
-	public void init() {
-		this.generateApple();
-
-		while (!gameOver) {
-			try {
-				Thread.sleep(2000);
-			} catch (Exception ex) {}
-			
-			this.update();
-			this.repaint();
+		if (!this.hasCell(row, col)) {
+			return false;
 		}
+		this.cells[col][row] = cell;
+		return true;
 	}
 	
-	public void setDirection(int direction) {
-		this.direction = direction;
-	}
-	
-	//moves the snake
-	public void update() {
-		if (!gameOver) {
-			if (direction != STATIC) {
-				Cell next = getNext(snake.getHead(), Cell.SNAKE);
-				
-				if (snake.crashed(next)) {
-					setDirection(STATIC);
-					gameOver = true;
-				}
-				else {
-					snake.move(next);
-					if (next.type == Cell.APPLE) {
-						snake.grow();
-						this.generateApple();
-					}
-				}
-			}
+	/**adds a cell with a specified row and column to the board*/
+	public boolean setCell(int r, int c, Cell cell) {
+		if (r >= this.rows || c > this.cols) {
+			return false;
 		}
+		this.cells[r][c] = cell;
+		return true;
 	}
 	
-	//used to animate (move/repaint) snake (NOT WORKING)
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		//if (direction == UP) {
-			//snake.move(getNext(snake.head));
-		//}
-		update();
-		repaint();
-	}
-	
-	//returns the next cell position of snake given the direction
-	public Cell getNext(Cell current, int type) {
-		int r = current.row;
-		int c = current.col;
-		
-		switch(direction) {
-		case(RIGHT):
-			c++;
-			break;
-		case(LEFT):
-			c--;
-			break;
-		case(UP):
-			r--;
-			break;
-		case(DOWN):
-			r++;
-			break;
-		}	
-		
-		Cell nextCell = new Cell(r, c, type);
-		return nextCell;
-	}
-	
-	//generates the apple
+	/**generates the apple, sets the apple to the board*/
 	public void generateApple() {
-		Random ran = new Random();
-		int r = ran.nextInt(rows-2); 
-		int c = ran.nextInt(cols-2);
-	
-		cells[r+1][c+1].type = Cell.APPLE;
+		boolean available = false;
+		while (!available) {
+			Random ran = new Random();
+			int r = ran.nextInt(this.rows-2)+1; 
+			int c = ran.nextInt(this.cols-2)+1;
+			
+			try {
+				if (cells[r][c].getType() == TileType.SNAKE) {
+					System.out.println("SNAKE!");;
+				}
+			} catch (NullPointerException ex) {
+				available = true;
+				this.setCell(new Cell(r, c, TileType.APPLE));
+			}
+		}
 	}	
 	
-	//GUI
-	public void paint(Graphics g) {
-		super.paint(g);
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, this.getSize().width, this.getSize().height);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {	
-                drawTile(g, cells[i][j].type, j , i);
-            }
-        }
-    }
 	
-	public void drawTile(Graphics g, int type, int x, int y) {
-		int xPos = x*10;
-		int yPos = y*10;
-		
-		if (type == Cell.SNAKE) {
-			System.out.println("drawing at " + xPos + ", " + yPos);
-			g.setColor(Color.GREEN);
-			g.fillRect(xPos, yPos, 10, 10);
+	/** Renders the board (for GUI):
+	 *  sets cells to null
+	 *  draws the snake onto the board
+	 */
+	public void render() {
+		for (int i = 0; i < this.rows; i++) { 
+			for (int j = 0; j < this.cols; j++) {
+				Cell cell = this.cells[i][j];
+				if (cell == null || cell.getType() != TileType.SNAKE) continue;
+				this.cells[i][j] = null;
+			}
 		}
-		else if (type == Cell.APPLE) {
-			g.setColor(Color.RED);
-			g.fillOval(xPos, yPos, 10, 10);
+		
+		if (this.snake != null) {
+			this.snake.draw(this);
 		}
 	}
 }

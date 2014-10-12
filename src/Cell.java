@@ -1,23 +1,41 @@
+/**
+ * Object Cell: consists of row, column, and type
+ * 
+ * @author Joyce
+ */
 
 public class Cell {
-	final static int EMPTY = 0;
-	final static int SNAKE = 1;
-	final static int APPLE = 2;
+	private TileType type;
+	private int row;
+	private int col;
 	
-	final int row, col;
-	int type;
-	
-	//constructor: defaults to empty square
+	/**constructor: defaults to empty square*/
 	public Cell(int row, int col) {
 		this.row = row;
 		this.col = col;
-		this.type = Cell.EMPTY;
+		this.type = TileType.EMPTY;
 	}
 	
-	//constructor: type specified
-	public Cell(int row, int col, int type) {
+	/**constructor: type specified*/
+	public Cell(int row, int col, TileType type) {
 		this.row = row;
 		this.col = col;
 		this.type = type;
+	}
+	
+	public TileType getType() {
+		return this.type;
+	}
+	
+	public void setType(TileType type) {
+		this.type = type;
+	}
+	
+	public int getX() {
+		return this.row;
+	}
+	
+	public int getY() {
+		return this.col;
 	}
 }
